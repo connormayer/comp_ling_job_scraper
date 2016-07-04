@@ -44,6 +44,14 @@ KEYWORDS = SEARCH_KEYWORDS + [
 BASE_INDEED_URL = "http://ca.indeed.com/jobs?q={}"
 
 
+# Utility functions
+def find_substring(text, substring):
+    for i in xrange(len(text)):
+        if text[i] == substring[0] and text[i:i + len(substring)] == substring:
+            return True
+    return False
+
+
 class Scraper():
     """
     Base class for job scrapers.
@@ -77,10 +85,11 @@ class Scraper():
                 job_url = self._unvisited_urls.pop(0)
                 try:
                     job_response = requests.get(job_url, verify=False)
-                    self.parse_result(job_response.text)
-                    self._visited_urls.append(job_url)
                 except Exception as e:
                     print "Error getting page at {}: {}".format(job_url, e.message)
+                else:
+                    self.parse_result(job_response.text)
+                self._visited_urls.append(job_url)
         self._print_results()
 
 
@@ -117,14 +126,8 @@ class IndeedScraper(Scraper):
             for word in word_tokenize(sent)
         ]
         for keyword in KEYWORDS:
-            if self.find_substring(tokens, keyword.split(' ')):
+            if find_substring(tokens, keyword.split(' ')):
                 self._keyword_counts[keyword] += 1
-
-    def find_substring(self, text, substring):
-        for i in xrange(len(text)):
-            if text[i] == substring[0] and text[i:i + len(substring)] == substring:
-                return True
-        return False
 
 if __name__ == "__main__":
     scrapers = [
